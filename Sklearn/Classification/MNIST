@@ -14,6 +14,10 @@ from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import roc_curve
 from sklearn.metrics import roc_auc_score
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import ConfusionMatrixDisplay
 
 
 
@@ -150,6 +154,54 @@ plt.show()
 y_train_pred_forest = y_probas_forest[:,1]>= 0.5 # positive proba >= 50%
 f1_score(y_train_5, y_train_pred_forest)
 roc_auc_score(y_train_5, y_scores_forest)
+
+svm_clf = SVC(random_state = 42)
+
+svm_clf.fit(X_train[:2000], y_train[:2000]) # y_train, not y_train_5
+
+svm_clf.predict([some_digit])
+
+some_digit_scores = svm_clf.decision_function([some_digit])
+some_digit_scores.round(2)
+
+class_id = some_digit_scores.argmax()
+class_id
+
+svm_clf.classes_
+
+svm_clf.classes_[class_id]
+
+ovr_clf = OneVsRestClassifier(SVC(random_state = 42))
+ovr_clf.fit(X_train[:2000], y_train[:2000])
+
+ovr_clf.predict([some_digit])
+
+len(ovr_clf.estimators_)
+
+# sgdclassifier
+
+sgd_clf = SGDClassifier(random_state = 42)
+sgd_clf.fit(X_train, y_train)
+sgd_clf.predict([some_digit])
+
+sgd_clf.decision_function([some_digit]).round()
+
+cross_val_score(sgd_clf, X_train, y_train, cv = 3, scoring = "accuracy")
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train.astype("flat64"))
+cross_val_score(sgd_clf, X_train_scaled, y_train, cv =3, scoring = "accuracy")
+
+y_train_pred = cross_val_predict(sgd_clf, X_train_scaled, y_train, cv = 3)
+ConfusionMatrixDisplay.from_predictions(y_train, y_train_pred)
+plt.show()
+
+ConfusionMatrixDisplay.from_predictions(y_train, y_train_pred, normalize = "true", values_format=".0%")
+
+sample_weight = (y_train_pred != y_train)
+ConfusionMatrixDisplay.from_predictions(y_train, y_train_pred, sample_weight=sample_weight, normalize="true", values_format=".0%")
+plt.show()
+
 
 
 
